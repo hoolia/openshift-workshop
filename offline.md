@@ -12,31 +12,35 @@ git push -u company master
 
 docker login docker-internal.mycompany.com
 docker pull docker.io/sterburg/workshop-spawner:7.0.1
-docker tag docker.io/sterburg/workshop-spawner:7.0.1 docker-internal.mycompany.com/openshift-workshop/workshop-spawner:7.0.1
+docker tag  docker.io/sterburg/workshop-spawner:7.0.1 docker-internal.mycompany.com/openshift-workshop/workshop-spawner:7.0.1
 docker push docker-internal.mycompany.com/openshift-workshop/workshop-spawner:7.0.1
 
 docker pull docker.io/sterburg/workshop-terminal:3.4.2
-docker tag docker.io/sterburg/workshop-terminal:3.4.2 docker-internal.mycompany.com/openshift-workshop/workshop-terminal:3.4.2
+docker tag  docker.io/sterburg/workshop-terminal:3.4.2 docker-internal.mycompany.com/openshift-workshop/workshop-terminal:3.4.2
 docker push docker-internal.mycompany.com/openshift-workshop/workshop-terminal:3.4.2
 
 docker pull docker.io/sterburg/workshop-dashboard:5.0.0
-docker tag docker.io/sterburg/workshop-dashboard:5.0.0 docker-internal.mycompany.com/openshift-workshop/workshop-dashboard:5.0.0
+docker tag  docker.io/sterburg/workshop-dashboard:5.0.0 docker-internal.mycompany.com/openshift-workshop/workshop-dashboard:5.0.0
 docker push docker-internal.mycompany.com/openshift-workshop/workshop-dashboard:5.0.0
 
 docker pull docker.io/sterburg/origin-console:4.2
-docker tag docker.io/sterburg/origin-console:4.2 docker-internal.mycompany.com/openshift-workshop/origin-console:4.2
+docker tag  docker.io/sterburg/origin-console:4.2 docker-internal.mycompany.com/openshift-workshop/origin-console:4.2
 docker push docker-internal.mycompany.com/openshift-workshop/origin-console:4.2
 
-docker pull  docker.io/sterburg/lab-getting-started:ocp-4.2
+docker pull docker.io/sterburg/lab-getting-started:ocp-4.2
 docker tag  docker.io/sterburg/lab-getting-started:ocp-4.2 docker-internal.mycompany.com/openshift-workshop/lab-getting-started:ocp-4.2
 docker push docker-internal.mycompany.com/openshift-workshop/lab-getting-started:ocp-4.2
 
+docker pull docker.io/sterburg/lab-k8s-fundamentals:1.18
+docker tag  docker.io/sterburg/lab-k8s-fundamentals:1.18 docker-internal.mycompany.com/openshift-workshop/lab-k8s-fundamentals:1.18
+docker push docker-internal.mycompany.com/openshift-workshop/lab-k8s-fundamentals:1.18
+
 docker pull docker.io/sterburg/pause
-docker tag docker.io/sterburg/pause docker-internal.mycompany.com/openshift-workshop/pause
+docker tag  docker.io/sterburg/pause docker-internal.mycompany.com/openshift-workshop/pause
 docker push docker-internal.mycompany.com/openshift-workshop/pause
 
 docker pull docker.io/sterburg/parksmap:1.3.0
-docker tag docker.io/sterburg/parksmap:1.3.0 docker-internal.mycompany.com/openshift-workshop/parksmap:1.3.0
+docker tag  docker.io/sterburg/parksmap:1.3.0 docker-internal.mycompany.com/openshift-workshop/parksmap:1.3.0
 docker push docker-internal.mycompany.com/openshift-workshop/parksmap:1.3.0
 ----
 
