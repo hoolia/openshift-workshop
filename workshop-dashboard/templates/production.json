@@ -1,0 +1,448 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "workshop-dashboard-production",
+        "annotations": {
+            "openshift.io/display-name": "Workshop Dashboard (Production)"
+        }
+    },
+    "parameters": [
+        {
+            "name": "WORKSHOP_NAME",
+            "value": "workshop",
+            "required": true
+        },
+        {
+            "name": "NAME_PREFIX",
+            "value": "",
+            "required": false
+        },
+        {
+            "name": "WORKSHOP_IMAGE",
+            "value": "quay.io/openshifthomeroom/workshop-dashboard:5.0.0",
+            "required": true
+        },
+        {
+            "name": "AUTH_USERNAME",
+            "value": ""
+        },
+        {
+            "name": "AUTH_PASSWORD",
+            "generate": "expression",
+            "from": "[a-zA-Z0-9]{16}"
+        },
+        {
+            "name": "CLUSTER_SUBDOMAIN",
+            "value": ""
+        },
+        {
+            "name": "OPENSHIFT_PROJECT",
+            "value": ""
+        },
+        {
+            "name": "OPENSHIFT_USERNAME",
+            "value": ""
+        },
+        {
+            "name": "OPENSHIFT_PASSWORD",
+            "value": ""
+        },
+        {
+            "name": "OPENSHIFT_TOKEN",
+            "value": ""
+        },
+        {
+            "name": "TERMINAL_ENVVARS",
+            "value": ""
+        },
+        {
+            "name": "WORKSHOP_ENVVARS",
+            "value": ""
+        },
+        {
+            "name": "GATEWAY_ENVVARS",
+            "value": ""
+        },
+        {
+            "name": "DOWNLOAD_URL",
+            "value": ""
+        },
+        {
+            "name": "WORKSHOP_FILE",
+            "value": ""
+        },
+        {
+            "name": "OC_VERSION",
+            "value": ""
+        },
+        {
+            "name": "ODO_VERSION",
+            "value": ""
+        },
+        {
+            "name": "KUBECTL_VERSION",
+            "value": ""
+        },
+        {
+            "name": "CONSOLE_IMAGE",
+            "value": "quay.io/openshift/origin-console:4.2",
+            "required": true
+        },
+        {
+            "name": "CONSOLE_BRANDING",
+            "value": "openshift",
+            "required": true
+        }
+    ],
+    "objects": [
+        {
+            "kind": "ServiceAccount",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-user",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                },
+                "annotations": {
+                    "serviceaccounts.openshift.io/oauth-redirectreference.first": "{\"kind\":\"OAuthRedirectReference\",\"apiVersion\":\"v1\",\"reference\":{\"kind\":\"Route\",\"name\":\"${NAME_PREFIX}${WORKSHOP_NAME}\"}}",
+                    "serviceaccounts.openshift.io/oauth-redirecturi.first": "oauth_callback",
+                    "serviceaccounts.openshift.io/oauth-want-challenges": "false"
+                }
+            }
+        },
+        {
+            "kind": "RoleBinding",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-admin",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                }
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}-user"
+                }
+            ],
+            "roleRef": {
+                "name": "admin"
+            }
+        },
+        {
+            "kind": "ImageStream",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                }
+            },
+            "spec": {
+                "lookupPolicy": {
+                    "local": true
+                },
+                "tags": [
+                    {
+                        "name": "latest",
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "${WORKSHOP_IMAGE}"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "kind": "ConfigMap",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-env",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                }
+            },
+            "data": {
+                "terminal.sh": "${TERMINAL_ENVVARS}",
+                "workshop.sh": "${WORKSHOP_ENVVARS}",
+                "gateway.sh": "${GATEWAY_ENVVARS}"
+            }
+        },
+        {
+            "kind": "DeploymentConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                }
+            },
+            "spec": {
+                "strategy": {
+                    "type": "Recreate"
+                },
+                "triggers": [
+                    {
+                        "type": "ConfigChange"
+                    },
+                    {
+                        "type": "ImageChange",
+                        "imageChangeParams": {
+                            "automatic": true,
+                            "containerNames": [
+                                "terminal"
+                            ],
+                            "from": {
+                                "kind": "ImageStreamTag",
+                                "name": "${NAME_PREFIX}${WORKSHOP_NAME}:latest"
+                            }
+                        }
+                    }
+                ],
+                "replicas": 1,
+                "selector": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                },
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                            "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                        }
+                    },
+                    "spec": {
+                        "serviceAccountName": "${NAME_PREFIX}${WORKSHOP_NAME}-user",
+                        "initContainers": [
+                            {
+                                "name": "setup-console",
+                                "image": "${WORKSHOP_IMAGE}",
+                                "command": [ "/opt/workshop/bin/setup-console.sh" ],
+                                "env": [
+                                    {
+                                        "name": "CLUSTER_SUBDOMAIN",
+                                        "value": "${CLUSTER_SUBDOMAIN}"
+                                    },
+                                    {
+                                        "name": "OPENSHIFT_PROJECT",
+                                        "value": "${OPENSHIFT_PROJECT}"
+                                    },
+                                    {
+                                        "name": "OPENSHIFT_USERNAME",
+                                        "value": "${OPENSHIFT_USERNAME}"
+                                    },
+                                    {
+                                        "name": "OPENSHIFT_PASSWORD",
+                                        "value": "${OPENSHIFT_PASSWORD}"
+                                    },
+                                    {
+                                        "name": "OPENSHIFT_TOKEN",
+                                        "value": "${OPENSHIFT_TOKEN}"
+                                    },
+                                    {
+                                        "name": "OC_VERSION",
+                                        "value": "${OC_VERSION}"
+                                    },
+                                    {
+                                        "name": "ODO_VERSION",
+                                        "value": "${ODO_VERSION}"
+                                    },
+                                    {
+                                        "name": "KUBECTL_VERSION",
+                                        "value": "${KUBECTL_VERSION}"
+                                    }
+                                ],
+                                "volumeMounts": [
+                                    {
+                                        "name": "shared",
+                                        "mountPath": "/var/run/workshop"
+                                    }
+                                ]
+                            }
+                        ],
+                        "containers": [
+                            {
+                                "name": "terminal",
+                                "image": "${NAME_PREFIX}${WORKSHOP_NAME}:latest",
+                                "ports": [
+                                    {
+                                        "containerPort": 10080,
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "env": [
+                                    {
+                                        "name": "PROJECT_NAMESPACE",
+                                        "valueFrom": {
+                                            "fieldRef": {
+                                                "fieldPath": "metadata.namespace"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "APPLICATION_NAME",
+                                        "value": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                                    },
+                                    {
+                                        "name": "WORKSHOP_NAME",
+                                        "value": "${WORKSHOP_NAME}"
+                                    },
+                                    {
+                                        "name": "AUTH_USERNAME",
+                                        "value": "${AUTH_USERNAME}"
+                                    },
+                                    {
+                                        "name": "AUTH_PASSWORD",
+                                        "value": "${AUTH_PASSWORD}"
+                                    },
+                                    {
+                                        "name": "CLUSTER_SUBDOMAIN",
+                                        "value": "${CLUSTER_SUBDOMAIN}"
+                                    },
+                                    {
+                                        "name": "OAUTH_SERVICE_ACCOUNT",
+                                        "value": "${NAME_PREFIX}${WORKSHOP_NAME}-user"
+                                    },
+                                    {
+                                        "name": "DOWNLOAD_URL",
+                                        "value": "${DOWNLOAD_URL}"
+                                    },
+                                    {
+                                        "name": "WORKSHOP_FILE",
+                                        "value": "${WORKSHOP_FILE}"
+                                    },
+                                    {
+                                        "name": "CONSOLE_URL",
+                                        "value": "http://0.0.0.0:10083"
+                                    },
+                                    {
+                                        "name": "OC_VERSION",
+                                        "value": "${OC_VERSION}"
+                                    },
+                                    {
+                                        "name": "ODO_VERSION",
+                                        "value": "${ODO_VERSION}"
+                                    },
+                                    {
+                                        "name": "KUBECTL_VERSION",
+                                        "value": "${KUBECTL_VERSION}"
+                                    }
+                                ],
+                                "volumeMounts": [
+                                    {
+                                        "name": "envvars",
+                                        "mountPath": "/opt/workshop/envvars"
+                                    },
+                                    {
+                                        "name": "shared",
+                                        "mountPath": "/var/run/workshop"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "console",
+                                "image": "${CONSOLE_IMAGE}",
+                                "command": [ "/var/run/workshop/start-console.sh" ],
+                                "env": [
+                                    {
+                                        "name": "BRIDGE_K8S_MODE",
+                                        "value": "in-cluster"
+                                    },
+                                    {
+                                        "name": "BRIDGE_LISTEN",
+                                        "value": "http://0.0.0.0:10083"
+                                    },
+                                    {
+                                        "name": "BRIDGE_BASE_PATH",
+                                        "value": "/console/"
+                                    },
+                                    {
+                                        "name": "BRIDGE_PUBLIC_DIR",
+                                        "value": "/opt/bridge/static"
+                                    },
+                                    {
+                                        "name": "BRIDGE_USER_AUTH",
+                                        "value": "disabled"
+                                    },
+                                    {
+                                        "name": "BRIDGE_BRANDING",
+                                        "value": "${CONSOLE_BRANDING}"
+                                    }
+                                ],
+                                "volumeMounts": [
+                                    {
+                                        "name": "shared",
+                                        "mountPath": "/var/run/workshop"
+                                    }
+                                ]
+                            }
+                        ],
+                        "volumes": [
+                            {
+                                "name": "envvars",
+                                "configMap": {
+                                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}-env",
+                                    "defaultMode": 420
+                                }
+                            },
+                            {
+                                "name": "shared",
+                                "emptyDir": {}
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "10080-tcp",
+                        "protocol": "TCP",
+                        "port": 10080,
+                        "targetPort": 10080
+                    }
+                ],
+                "selector": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                }
+            }
+        },
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                }
+            },
+            "spec": {
+                "host": "",
+                "to": {
+                    "kind": "Service",
+                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "weight": 100
+                },
+                "port": {
+                    "targetPort": "10080-tcp"
+                },
+                "tls": {
+                    "termination": "edge",
+                    "insecureEdgeTerminationPolicy": "Redirect"
+                }
+            }
+        }
+    ]
+}

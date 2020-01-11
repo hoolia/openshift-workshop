@@ -6,7 +6,7 @@ SCRIPTS_DIR=`dirname $0`
 
 . $SCRIPTS_DIR/setup-environment.sh
 
-TEMPLATE_REPO=https://raw.githubusercontent.com/$DASHBOARD_REPO
+TEMPLATE_REPO=$TEMPLATE_REPO/$DASHBOARD_REPO
 
 TEMPLATE_FILE=$DASHBOARD_VARIANT.json
 

@@ -55,7 +55,7 @@ spec:
             memory: 128Mi
       containers:
       - name: pause
-        image: gcr.io/google_containers/pause
+        image: $PAUSE_IMAGE
         resources:
           limits:
             memory: 128Mi

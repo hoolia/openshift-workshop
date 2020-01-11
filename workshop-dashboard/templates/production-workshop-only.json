@@ -1,0 +1,244 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "workshop-dashboard-workshop-only",
+        "annotations": {
+            "openshift.io/display-name": "Workshop Dashboard (Production/Workshop Only)"
+        }
+    },
+    "parameters": [
+        {
+            "name": "WORKSHOP_NAME",
+            "value": "workshop",
+            "required": true
+        },
+        {
+            "name": "NAME_PREFIX",
+            "value": "",
+            "required": false
+        },
+        {
+            "name": "WORKSHOP_IMAGE",
+            "value": "quay.io/openshifthomeroom/workshop-dashboard:5.0.0",
+            "required": true
+        },
+        {
+            "name": "WORKSHOP_ENVVARS",
+            "value": ""
+        },
+        {
+            "name": "DOWNLOAD_URL",
+            "value": ""
+        },
+        {
+            "name": "WORKSHOP_FILE",
+            "value": ""
+        }
+    ],
+    "objects": [
+        {
+            "kind": "ServiceAccount",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-user",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                }
+            }
+        },
+        {
+            "kind": "ImageStream",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                }
+            },
+            "spec": {
+                "lookupPolicy": {
+                    "local": true
+                },
+                "tags": [
+                    {
+                        "name": "latest",
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "${WORKSHOP_IMAGE}"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "kind": "ConfigMap",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-env",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                }
+            },
+            "data": {
+                "workshop.sh": "${WORKSHOP_ENVVARS}"
+            }
+        },
+        {
+            "kind": "DeploymentConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                }
+            },
+            "spec": {
+                "strategy": {
+                    "type": "Recreate"
+                },
+                "triggers": [
+                    {
+                        "type": "ConfigChange"
+                    },
+                    {
+                        "type": "ImageChange",
+                        "imageChangeParams": {
+                            "automatic": true,
+                            "containerNames": [
+                                "terminal"
+                            ],
+                            "from": {
+                                "kind": "ImageStreamTag",
+                                "name": "${NAME_PREFIX}${WORKSHOP_NAME}:latest"
+                            }
+                        }
+                    }
+                ],
+                "replicas": 1,
+                "selector": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                },
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                            "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                        }
+                    },
+                    "spec": {
+                        "serviceAccountName": "${NAME_PREFIX}${WORKSHOP_NAME}-user",
+                        "automountServiceAccountToken": false,
+                        "containers": [
+                            {
+                                "name": "terminal",
+                                "image": "${NAME_PREFIX}${WORKSHOP_NAME}:latest",
+                                "ports": [
+                                    {
+                                        "containerPort": 10080,
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "env": [
+                                    {
+                                        "name": "PROJECT_NAMESPACE",
+                                        "valueFrom": {
+                                            "fieldRef": {
+                                                "fieldPath": "metadata.namespace"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "APPLICATION_NAME",
+                                        "value": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                                    },
+                                    {
+                                        "name": "WORKSHOP_NAME",
+                                        "value": "${WORKSHOP_NAME}"
+                                    },
+                                    {
+                                        "name": "CONFIGURATION_TYPE",
+                                        "value": "workshop-only"
+                                    },
+                                    {
+                                        "name": "WORKSHOP_ONLY",
+                                        "value": "true"
+                                    },
+                                    {
+                                        "name": "DOWNLOAD_URL",
+                                        "value": "${DOWNLOAD_URL}"
+                                    },
+                                    {
+                                        "name": "WORKSHOP_FILE",
+                                        "value": "${WORKSHOP_FILE}"
+                                    }
+                                ],
+                                "volumeMounts": [
+                                    {
+                                        "name": "envvars",
+                                        "mountPath": "/opt/workshop/envvars"
+                                    }
+                                ]
+                            }
+                        ],
+                        "volumes": [
+                            {
+                                "name": "envvars",
+                                "configMap": {
+                                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}-env",
+                                    "defaultMode": 420
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "10080-tcp",
+                        "protocol": "TCP",
+                        "port": 10080,
+                        "targetPort": 10080
+                    }
+                ],
+                "selector": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                }
+            }
+        },
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                }
+            },
+            "spec": {
+                "host": "",
+                "to": {
+                    "kind": "Service",
+                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "weight": 100
+                },
+                "port": {
+                    "targetPort": "10080-tcp"
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,35 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+bases:
+- ../../bases/spawner-resources
+
+commonLabels:
+  app: learning-portal
+  spawner: learning-portal
+
+resources:
+- spawner-basic-cluster-role-binding.yaml
+- spawner-extra-cluster-role.yaml
+- spawner-extra-cluster-role-binding.yaml
+- spawner-rules-cluster-role.yaml
+- spawner-rules-cluster-role-binding.yaml
+- session-rules-cluster-role.yaml
+- session-rules-cluster-role-binding.yaml
+- session-resources-config-map.yaml
+
+patchesJson6902:
+- path: spawner-deployment-patch.yaml
+  target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: spawner
+
+configMapGenerator:
+- name: spawner-environ
+  behavior: merge
+  literals:
+  - CONFIGURATION_TYPE="learning-portal"
+  - SERVER_LIMIT="8"
+  - RESOURCE_BUDGET="default"

@@ -1,0 +1,954 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "jumpbox-server-development",
+        "annotations": {
+            "openshift.io/display-name": "Jumpbox Server (Development)"
+        }
+    },
+    "parameters": [
+        {
+            "name": "SPAWNER_NAMESPACE",
+            "value": "",
+            "required": true
+        },
+        {
+            "name": "CLUSTER_SUBDOMAIN",
+            "value": "",
+            "required": true
+        },
+        {
+            "name": "WORKSHOP_NAME",
+            "value": "jumpbox-server",
+            "required": true
+        },
+        {
+            "name": "NAME_PREFIX",
+            "value": "",
+            "required": false
+        },
+        {
+            "name": "GIT_REPOSITORY_URL",
+            "value": "https://github.com/openshift-homeroom/workshop-spawner.git",
+            "required": true
+        },
+        {
+            "name": "GIT_REPOSITORY_REF",
+            "value": "develop",
+            "required": true
+        },
+        {
+            "name": "SPAWNER_MEMORY",
+            "value": "768Mi"
+        },
+        {
+            "name": "WORKSHOP_MEMORY",
+            "value": "512Mi"
+        },
+        {
+            "name": "VOLUME_SIZE",
+            "value": ""
+        },
+        {
+            "name": "ADMIN_USERS",
+            "value": ""
+        },
+        {
+            "name": "IDLE_TIMEOUT",
+            "value": "7200"
+        },
+        {
+            "name": "WORKSHOP_IMAGE",
+            "value": "",
+            "required": false
+        },
+        {
+            "name": "TERMINAL_ENVVARS",
+            "value": ""
+        },
+        {
+            "name": "WORKSHOP_ENVVARS",
+            "value": ""
+        },
+        {
+            "name": "GATEWAY_ENVVARS",
+            "value": ""
+        },
+        {
+            "name": "DOWNLOAD_URL",
+            "value": ""
+        },
+        {
+            "name": "WORKSHOP_FILE",
+            "value": ""
+        },
+        {
+            "name": "OC_VERSION",
+            "value": ""
+        },
+        {
+            "name": "ODO_VERSION",
+            "value": ""
+        },
+        {
+            "name": "KUBECTL_VERSION",
+            "value": ""
+        },
+        {
+            "name": "JUPYTERHUB_CONFIG",
+            "value": "",
+            "required": false
+        },
+        {
+            "name": "JUPYTERHUB_ENVVARS",
+            "value": "",
+            "required": false
+        },
+        {
+            "name": "KEYCLOAK_USER",
+            "generate": "expression",
+            "from": "[a-zA-Z0-9]{8}",
+            "required": true
+        },
+        {
+            "name": "KEYCLOAK_PASSWORD",
+            "generate": "expression",
+            "from": "[a-zA-Z0-9]{16}",
+            "required": true
+        },
+        {
+            "name": "KEYCLOAK_DB_VOLUME_SIZE",
+            "value": "1Gi",
+            "required": true
+        },
+        {
+            "name": "KEYCLOAK_DB_PASSWORD",
+            "generate": "expression",
+            "from": "[a-zA-Z0-9]{16}",
+            "required": true
+        },
+        {
+            "name": "OAUTH_CLIENT_SECRET",
+            "generate": "expression",
+            "from": "[a-f0-9]{32}",
+            "required": true
+        },
+        {
+            "name": "LETS_ENCRYPT",
+            "value": "false",
+            "required": true
+        }
+    ],
+    "objects": [
+        {
+            "kind": "ServiceAccount",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            }
+        },
+        {
+            "kind": "ServiceAccount",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-session",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            }
+        },
+        {
+            "kind": "RoleBinding",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-basic",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner"
+                }
+            ],
+            "roleRef": {
+                "name": "edit"
+            }
+        },
+        {
+            "kind": "ImageStream",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            }
+        },
+        {
+            "kind": "BuildConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "triggers": [
+                    {
+                        "type": "ConfigChange"
+                    },
+                    {
+                        "type": "ImageChange"
+                    }
+                ],
+                "source": {
+                    "type": "Git",
+                    "git": {
+                        "uri": "${GIT_REPOSITORY_URL}",
+                        "ref": "${GIT_REPOSITORY_REF}"
+                    },
+                    "contextDir": "jupyterhub"
+                },
+                "strategy": {
+                    "type": "Docker",
+                    "dockerStrategy": {
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "centos/s2i-base-centos7:latest"
+                        }
+                    }
+                },
+                "output": {
+                    "to": {
+                        "kind": "ImageStreamTag",
+                        "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner:latest"
+                    }
+                }
+            }
+        },
+        {
+            "kind": "ConfigMap",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner-configs",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            },
+            "data": {
+                "jupyterhub_config.py": "${JUPYTERHUB_CONFIG}",
+                "jupyterhub_config.sh": "${JUPYTERHUB_ENVVARS}"
+            }
+        },
+        {
+            "kind": "ConfigMap",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-session-envvars",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            },
+            "data": {
+                "terminal.sh": "${TERMINAL_ENVVARS}",
+                "workshop.sh": "${WORKSHOP_ENVVARS}",
+                "gateway.sh": "${GATEWAY_ENVVARS}"
+            }
+        },
+        {
+            "kind": "DeploymentConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "strategy": {
+                    "type": "Recreate"
+                },
+                "triggers": [
+                    {
+                        "type": "ConfigChange"
+                    },
+                    {
+                        "type": "ImageChange",
+                        "imageChangeParams": {
+                            "automatic": true,
+                            "containerNames": [
+                                "spawner"
+                            ],
+                            "from": {
+                                "kind": "ImageStreamTag",
+                                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner:latest"
+                            }
+                        }
+                    }
+                ],
+                "replicas": 1,
+                "selector": {
+                    "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner"
+                },
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                            "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                            "spawner": "jumpbox-server",
+                            "class": "spawner"
+                        }
+                    },
+                    "spec": {
+                        "serviceAccountName": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                        "containers": [
+                            {
+                                "name": "spawner",
+                                "ports": [
+                                    {
+                                        "containerPort": 8080,
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "resources": {
+                                    "limits": {
+                                        "memory": "${SPAWNER_MEMORY}"
+                                    },
+                                    "requests": {
+                                        "memory": "${SPAWNER_MEMORY}"
+                                    }
+                                },
+                                "readinessProbe": {
+                                    "httpGet": {
+                                        "path": "/hub/api",
+                                        "port": 8080,
+                                        "scheme": "HTTP"
+                                    },
+                                    "periodSeconds": 10,
+                                    "successThreshold": 1,
+                                    "failureThreshold": 3,
+                                    "timeoutSeconds": 1
+                                },
+                                "livenessProbe": {
+                                    "httpGet": {
+                                        "path": "/hub/api",
+                                        "port": 8080,
+                                        "scheme": "HTTP"
+                                    },
+                                    "periodSeconds": 10,
+                                    "successThreshold": 1,
+                                    "failureThreshold": 3,
+                                    "timeoutSeconds": 1
+                                },
+                                "env": [
+                                    {
+                                        "name": "CONFIGURATION_TYPE",
+                                        "value": "jumpbox-server"
+                                    },
+                                    {
+                                        "name": "APPLICATION_NAME",
+                                        "value": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                                    },
+                                    {
+                                        "name": "WORKSHOP_NAME",
+                                        "value": "${WORKSHOP_NAME}"
+                                    },
+                                    {
+                                        "name": "WORKSHOP_IMAGE",
+                                        "value": "${WORKSHOP_IMAGE}"
+                                    },
+                                    {
+                                        "name": "WORKSHOP_MEMORY",
+                                        "value": "${WORKSHOP_MEMORY}"
+                                    },
+                                    {
+                                        "name": "VOLUME_SIZE",
+                                        "value": "${VOLUME_SIZE}"
+                                    },
+                                    {
+                                        "name": "ADMIN_USERS",
+                                        "value": "${ADMIN_USERS}"
+                                    },
+                                    {
+                                        "name": "IDLE_TIMEOUT",
+                                        "value": "${IDLE_TIMEOUT}"
+                                    },
+                                    {
+                                        "name": "DOWNLOAD_URL",
+                                        "value": "${DOWNLOAD_URL}"
+                                    },
+                                    {
+                                        "name": "WORKSHOP_FILE",
+                                        "value": "${WORKSHOP_FILE}"
+                                    },
+                                    {
+                                        "name": "OC_VERSION",
+                                        "value": "${OC_VERSION}"
+                                    },
+                                    {
+                                        "name": "ODO_VERSION",
+                                        "value": "${ODO_VERSION}"
+                                    },
+                                    {
+                                        "name": "KUBECTL_VERSION",
+                                        "value": "${KUBECTL_VERSION}"
+                                    },
+                                    {
+                                        "name": "OAUTH_CLIENT_SECRET",
+                                        "value": "${OAUTH_CLIENT_SECRET}"
+                                    }
+                                ],
+                                "volumeMounts": [
+                                    {
+                                        "mountPath": "/opt/app-root/data",
+                                        "name": "data"
+                                    },
+                                    {
+                                        "name": "configs",
+                                        "mountPath": "/opt/app-root/configs"
+                                    }
+                                ]
+                            }
+                        ],
+                        "volumes": [
+                            {
+                                "name": "data",
+                                "persistentVolumeClaim": {
+                                    "claimName": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner-data"
+                                }
+                            },
+                            {
+                                "name": "configs",
+                                "configMap": {
+                                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner-configs",
+                                    "defaultMode": 420
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner-data",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": "1Gi"
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "8080-tcp",
+                        "protocol": "TCP",
+                        "port": 8080,
+                        "targetPort": 8080
+                    },
+                    {
+                        "name": "8081-tcp",
+                        "protocol": "TCP",
+                        "port": 8081,
+                        "targetPort": 8081
+                    }
+                ],
+                "selector": {
+                    "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner"
+                }
+            }
+        },
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                },
+                "annotations": {
+                    "kubernetes.io/tls-acme": "${LETS_ENCRYPT}"
+                }
+            },
+            "spec": {
+                "host": "${WORKSHOP_NAME}-${SPAWNER_NAMESPACE}.${CLUSTER_SUBDOMAIN}",
+                "to": {
+                    "kind": "Service",
+                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                    "weight": 100
+                },
+                "port": {
+                    "targetPort": "8080-tcp"
+                },
+                "tls": {
+                    "termination": "edge",
+                    "insecureEdgeTerminationPolicy": "Redirect"
+                }
+            }
+        },
+        {
+            "kind": "ImageStream",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-session",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "lookupPolicy": {
+                    "local": true
+                },
+                "tags": [
+                    {
+                        "name": "latest",
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "quay.io/openshifthomeroom/workshop-terminal:3.4.2"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "kind": "ImageStream",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            }
+        },
+        {
+            "kind": "BuildConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "triggers": [
+                    {
+                        "type": "ConfigChange"
+                    },
+                    {
+                        "type": "ImageChange"
+                    }
+                ],
+                "source": {
+                    "type": "Git",
+                    "git": {
+                        "uri": "${GIT_REPOSITORY_URL}",
+                        "ref": "${GIT_REPOSITORY_REF}"
+                    },
+                    "contextDir": "keycloak"
+                },
+                "strategy": {
+                    "type": "Docker",
+                    "dockerStrategy": {
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "jboss/keycloak:7.0.1"
+                        }
+                    }
+                },
+                "output": {
+                    "to": {
+                        "kind": "ImageStreamTag",
+                        "name": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak:latest"
+                    }
+                }
+            }
+        },
+        {
+            "kind": "DeploymentConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "strategy": {
+                    "type": "Recreate"
+                },
+                "triggers": [
+                    {
+                        "imageChangeParams": {
+                            "automatic": true,
+                            "containerNames": [
+                                "keycloak"
+                            ],
+                            "from": {
+                                "kind": "ImageStreamTag",
+                                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak:latest"
+                            }
+                        },
+                        "type": "ImageChange"
+                    },
+                    {
+                        "type": "ConfigChange"
+                    }
+                ],
+                "replicas": 1,
+                "selector": {
+                    "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak"
+                },
+                "template": {
+                    "metadata": {
+                        "name": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak",
+                        "labels": {
+                            "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak",
+                            "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                            "spawner": "jumpbox-server",
+                            "class": "spawner"
+                        }
+                    },
+                    "spec": {
+                        "serviceAccountName": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                        "containers": [
+                            {
+                                "name": "keycloak",
+                                "ports": [
+                                    {
+                                        "containerPort": 8080,
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 8443,
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "resources": {
+                                    "limits": {
+                                        "memory": "1Gi"
+                                    }
+                                },
+                                "env": [
+                                    {
+                                        "name": "SPAWNER_APPLICATION",
+                                        "value": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner"
+                                    },
+                                    {
+                                        "name": "OAUTH_CLIENT_SECRET",
+                                        "value": "${OAUTH_CLIENT_SECRET}"
+                                    },
+                                    {
+                                        "name": "KEYCLOAK_USER",
+                                        "value": "${KEYCLOAK_USER}"
+                                    },
+                                    {
+                                        "name": "KEYCLOAK_PASSWORD",
+                                        "value": "${KEYCLOAK_PASSWORD}"
+                                    },
+                                    {
+                                        "name": "DB_VENDOR",
+                                        "value": "postgres"
+                                    },
+                                    {
+                                        "name": "DB_ADDR",
+                                        "value": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak-db"
+                                    },
+                                    {
+                                        "name": "DB_PORT",
+                                        "value": "5432"
+                                    },
+                                    {
+                                        "name": "DB_DATABASE",
+                                        "value": "keycloak"
+                                    },
+                                    {
+                                        "name": "DB_USER",
+                                        "value": "keycloak"
+                                    },
+                                    {
+                                        "name": "DB_PASSWORD",
+                                        "value": "${KEYCLOAK_DB_PASSWORD}"
+                                    },
+                                    {
+                                        "name": "PROXY_ADDRESS_FORWARDING",
+                                        "value": "true"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "8080-tcp",
+                        "protocol": "TCP",
+                        "port": 8080,
+                        "targetPort": 8080
+                    },
+                    {
+                        "name": "8443-tcp",
+                        "protocol": "TCP",
+                        "port": 8443,
+                        "targetPort": 8443
+                    }
+                ],
+                "selector": {
+                    "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak"
+                }
+            }
+        },
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                },
+                "annotations": {
+                    "kubernetes.io/tls-acme": "${LETS_ENCRYPT}"
+                }
+            },
+            "spec": {
+                "host": "${WORKSHOP_NAME}-keycloak-${SPAWNER_NAMESPACE}.${CLUSTER_SUBDOMAIN}",
+                "to": {
+                    "kind": "Service",
+                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak",
+                    "weight": 100
+                },
+                "port": {
+                    "targetPort": "8080-tcp"
+                },
+                "tls": {
+                    "termination": "edge"
+                }
+            }
+        },
+        {
+            "kind": "PersistentVolumeClaim",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak-data",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": "${KEYCLOAK_DB_VOLUME_SIZE}"
+                    }
+                }
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "DeploymentConfig",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak-db",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "replicas": 1,
+                "selector": {
+                    "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak-db"
+                },
+                "strategy": {
+                    "type": "Recreate"
+                },
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak-db",
+                            "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                            "spawner": "jumpbox-server",
+                            "class": "spawner"
+                        }
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "name": "postgresql",
+                                "env": [
+                                    {
+                                        "name": "POSTGRESQL_USER",
+                                        "value": "keycloak"
+                                    },
+                                    {
+                                        "name": "POSTGRESQL_PASSWORD",
+                                        "value": "${KEYCLOAK_DB_PASSWORD}"
+                                    },
+                                    {
+                                        "name": "POSTGRESQL_DATABASE",
+                                        "value": "keycloak"
+                                    }
+                                ],
+                                "livenessProbe": {
+                                    "tcpSocket": {
+                                        "port": 5432
+                                    }
+                                },
+                                "ports": [
+                                    {
+                                        "containerPort": 5432,
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "readinessProbe": {
+                                    "exec": {
+                                        "command": [
+                                            "/bin/sh",
+                                            "-i",
+                                            "-c",
+                                            "psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'"
+                                        ]
+                                    }
+                                },
+                                "volumeMounts": [
+                                    {
+                                        "mountPath": "/var/lib/pgsql/data",
+                                        "name": "data"
+                                    }
+                                ]
+                            }
+                        ],
+                        "volumes": [
+                            {
+                                "name": "data",
+                                "persistentVolumeClaim": {
+                                    "claimName": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak-data"
+                                }
+                            }
+                        ]
+                    }
+                },
+                "triggers": [
+                    {
+                        "imageChangeParams": {
+                            "automatic": true,
+                            "containerNames": [
+                                "postgresql"
+                            ],
+                            "from": {
+                                "kind": "ImageStreamTag",
+                                "name": "postgresql:9.6",
+                                "namespace": "openshift"
+                            }
+                        },
+                        "type": "ImageChange"
+                    },
+                    {
+                        "type": "ConfigChange"
+                    }
+                ]
+            }
+        },
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak-db",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "jumpbox-server",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "5432-tcp",
+                        "protocol": "TCP",
+                        "port": 5432,
+                        "targetPort": 5432
+                    }
+                ],
+                "selector": {
+                    "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}-keycloak-db"
+                }
+            }
+        }
+    ]
+}

@@ -6,7 +6,7 @@ SCRIPTS_DIR=`dirname $0`
 
 . $SCRIPTS_DIR/setup-environment.sh
 
-TEMPLATE_REPO=https://raw.githubusercontent.com/$SPAWNER_REPO
+TEMPLATE_REPO=$TEMPLATE_REPO/$SPAWNER_REPO
 TEMPLATE_FILE=$SPAWNER_MODE-$SPAWNER_VARIANT.json
 TEMPLATE_PATH=$TEMPLATE_REPO/$SPAWNER_VERSION/templates/$TEMPLATE_FILE
 
@@ -122,7 +122,7 @@ spec:
             memory: 128Mi
       containers:
       - name: pause
-        image: gcr.io/google_containers/pause
+        image: $PAUSE_IMAGE
         resources:
           limits:
             memory: 128Mi
@@ -137,6 +137,8 @@ fi
 
 echo "### Creating spawner application."
 
+oc adm policy add-scc-to-user anyuid -z "${WORKSHOP_NAME}-spawner"
+
 if [ x"$SPAWNER_MODE" == x"learning-portal" ]; then
     oc process -n "$NAMESPACE" -f $TEMPLATE_PATH \
         --param SPAWNER_NAMESPACE="$NAMESPACE" \
@@ -147,6 +149,7 @@ if [ x"$SPAWNER_MODE" == x"learning-portal" ]; then
         --param WORKSHOP_TITLE="$WORKSHOP_TITLE" \
         --param WORKSHOP_DESCRIPTION="$WORKSHOP_DESCRIPTION" \
         --param SPAWNER_IMAGE="$SPAWNER_IMAGE" \
+        --param DASHBOARD_IMAGE="$DASHBOARD_IMAGE" \
         --param CONSOLE_IMAGE="$CONSOLE_IMAGE" \
         --param DOWNLOAD_URL="$DOWNLOAD_URL" \
         --param SPAWNER_ROLE="$SPAWNER_ROLE" \
@@ -177,6 +180,7 @@ if [ x"$SPAWNER_MODE" == x"user-workspace" ]; then
         --param WORKSHOP_TITLE="$WORKSHOP_TITLE" \
         --param WORKSHOP_DESCRIPTION="$WORKSHOP_DESCRIPTION" \
         --param SPAWNER_IMAGE="$SPAWNER_IMAGE" \
+        --param DASHBOARD_IMAGE="$DASHBOARD_IMAGE" \
         --param CONSOLE_IMAGE="$CONSOLE_IMAGE" \
         --param DOWNLOAD_URL="$DOWNLOAD_URL" \
         --param WORKSHOP_FILE="$WORKSHOP_FILE" \
@@ -203,6 +207,7 @@ if [ x"$SPAWNER_MODE" == x"hosted-workshop" ]; then
         --param WORKSHOP_TITLE="$WORKSHOP_TITLE" \
         --param WORKSHOP_DESCRIPTION="$WORKSHOP_DESCRIPTION" \
         --param SPAWNER_IMAGE="$SPAWNER_IMAGE" \
+        --param DASHBOARD_IMAGE="$DASHBOARD_IMAGE" \
         --param CONSOLE_IMAGE="$CONSOLE_IMAGE" \
         --param DOWNLOAD_URL="$DOWNLOAD_URL" \
         --param WORKSHOP_FILE="$WORKSHOP_FILE" \
@@ -228,6 +233,7 @@ if [ x"$SPAWNER_MODE" == x"terminal-server" ]; then
         --param WORKSHOP_TITLE="$WORKSHOP_TITLE" \
         --param WORKSHOP_DESCRIPTION="$WORKSHOP_DESCRIPTION" \
         --param SPAWNER_IMAGE="$SPAWNER_IMAGE" \
+        --param DASHBOARD_IMAGE="$DASHBOARD_IMAGE" \
         --param CONSOLE_IMAGE="$CONSOLE_IMAGE" \
         --param DOWNLOAD_URL="$DOWNLOAD_URL" \
         --param WORKSHOP_FILE="$WORKSHOP_FILE" \
@@ -249,6 +255,7 @@ if [ x"$SPAWNER_MODE" == x"jumpbox-server" ]; then
         --param WORKSHOP_NAME="$WORKSHOP_NAME" \
         --param NAME_PREFIX="$NAME_PREFIX" \
         --param SPAWNER_IMAGE="$SPAWNER_IMAGE" \
+        --param DASHBOARD_IMAGE="$DASHBOARD_IMAGE" \
         --param DOWNLOAD_URL="$DOWNLOAD_URL" \
         --param WORKSHOP_FILE="$WORKSHOP_FILE" \
         --param WORKSHOP_MEMORY="$WORKSHOP_MEMORY" \

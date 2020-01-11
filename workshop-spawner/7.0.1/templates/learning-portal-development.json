@@ -1,0 +1,802 @@
+{
+    "kind": "Template",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "learning-portal-development",
+        "annotations": {
+            "openshift.io/display-name": "Learning Portal (Development)"
+        }
+    },
+    "parameters": [
+        {
+            "name": "SPAWNER_NAMESPACE",
+            "value": "",
+            "required": true
+        },
+        {
+            "name": "CLUSTER_SUBDOMAIN",
+            "value": "",
+            "required": true
+        },
+        {
+            "name": "WORKSHOP_NAME",
+            "value": "learning-portal",
+            "required": true
+        },
+        {
+            "name": "NAME_PREFIX",
+            "value": "",
+            "required": false
+        },
+        {
+            "name": "HOMEROOM_NAME",
+            "value": ""
+        },
+        {
+            "name": "WORKSHOP_TITLE",
+            "value": ""
+        },
+        {
+            "name": "WORKSHOP_DESCRIPTION",
+            "value": ""
+        },
+        {
+            "name": "SPAWNER_PASSWORD",
+            "value": ""
+        },
+        {
+            "name": "GIT_REPOSITORY_URL",
+            "value": "https://github.com/openshift-homeroom/workshop-spawner.git",
+            "required": true
+        },
+        {
+            "name": "GIT_REPOSITORY_REF",
+            "value": "develop",
+            "required": true
+        },
+        {
+            "name": "SPAWNER_ROLE",
+            "value": "admin",
+            "required": true
+        },
+        {
+            "name": "SPAWNER_MEMORY",
+            "value": "768Mi"
+        },
+        {
+            "name": "WORKSHOP_MEMORY",
+            "value": "512Mi"
+        },
+        {
+            "name": "CONSOLE_MEMORY",
+            "value": "128Mi"
+        },
+        {
+            "name": "CONSOLE_BRANDING",
+            "value": "openshift"
+        },
+        {
+            "name": "CONSOLE_IMAGE",
+            "value": "quay.io/openshift/origin-console:4.2",
+            "required": true
+        },
+        {
+            "name": "DASHBOARD_IMAGE",
+            "value": "quay.io/openshifthomeroom/workshop-dashboard:5.0.0",
+            "required": true
+        },
+        {
+            "name": "SERVER_LIMIT",
+            "value": "8"
+        },
+        {
+            "name": "IDLE_TIMEOUT",
+            "value": "300"
+        },
+        {
+            "name": "MAX_SESSION_AGE",
+            "value": "3600"
+        },
+        {
+            "name": "RESOURCE_BUDGET",
+            "value": "default",
+            "required": true
+        },
+        {
+            "name": "WORKSHOP_IMAGE",
+            "value": "",
+            "required": false
+        },
+        {
+            "name": "TERMINAL_ENVVARS",
+            "value": ""
+        },
+        {
+            "name": "WORKSHOP_ENVVARS",
+            "value": ""
+        },
+        {
+            "name": "GATEWAY_ENVVARS",
+            "value": ""
+        },
+        {
+            "name": "DOWNLOAD_URL",
+            "value": ""
+        },
+        {
+            "name": "WORKSHOP_FILE",
+            "value": ""
+        },
+        {
+            "name": "OC_VERSION",
+            "value": ""
+        },
+        {
+            "name": "ODO_VERSION",
+            "value": ""
+        },
+        {
+            "name": "KUBECTL_VERSION",
+            "value": ""
+        },
+        {
+            "name": "JUPYTERHUB_CONFIG",
+            "value": "",
+            "required": false
+        },
+        {
+            "name": "JUPYTERHUB_ENVVARS",
+            "value": "",
+            "required": false
+        },
+        {
+            "name": "SPAWNER_RULES",
+            "value": "[]",
+            "required": true
+        },
+        {
+            "name": "EXTRA_RESOURCES",
+            "value": ""
+        },
+        {
+            "name": "SESSION_RULES",
+            "value": "[]",
+            "required": true
+        },
+        {
+            "name": "EXPOSED_PORTS",
+            "value": ""
+        },
+        {
+            "name": "HOMEROOM_LINK",
+            "value": ""
+        },
+        {
+            "name": "LETS_ENCRYPT",
+            "value": "false",
+            "required": true
+        }
+    ],
+    "objects": [
+        {
+            "kind": "ServiceAccount",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            }
+        },
+        {
+            "kind": "ClusterRoleBinding",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner-basic",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                    "namespace": "${SPAWNER_NAMESPACE}"
+                }
+            ],
+            "roleRef": {
+                "apiGroup": "rbac.authorization.k8s.io",
+                "kind": "ClusterRole",
+                "name": "${SPAWNER_ROLE}"
+            }
+        },
+        {
+            "kind": "ClusterRole",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner-extra",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            },
+            "rules": [
+                {
+                    "apiGroups": [
+                        "",
+                        "authorization.openshift.io",
+                        "rbac.authorization.k8s.io"
+                    ],
+                    "resourceNames": [
+                        "view",
+                        "edit",
+                        "admin"
+                    ],
+                    "resources": [
+                        "clusterroles",
+                        "roles"
+                    ],
+                    "verbs": [
+                        "bind"
+                    ]
+                },
+                {
+                    "apiGroups": [
+                        "",
+                        "authorization.openshift.io",
+                        "rbac.authorization.k8s.io"
+                    ],
+                    "resources": [
+                        "clusterrole",
+                        "clusterrolebindings",
+                        "rolebindings"
+                    ],
+                    "verbs": [
+                        "create",
+                        "delete",
+                        "deletecollection",
+                        "get",
+                        "list",
+                        "patch",
+                        "update",
+                        "watch"
+                    ]
+                },
+                {
+                    "apiGroups": [
+                        ""
+                    ],
+                    "resources": [
+                        "limitranges",
+                        "resourcequotas"
+                    ],
+                    "verbs": [
+                        "create",
+                        "delete",
+                        "deletecollection",
+                        "get",
+                        "list",
+                        "patch",
+                        "update",
+                        "watch"
+                    ]
+                },
+                {
+                    "apiGroups": [
+                        ""
+                    ],
+                    "resources": [
+                        "namespaces"
+                    ],
+                    "verbs": [
+                        "create",
+                        "delete",
+                        "deletecollection",
+                        "get",
+                        "list",
+                        "patch",
+                        "update",
+                        "watch"
+                    ]
+                }
+            ]
+        },
+        {
+            "kind": "ClusterRoleBinding",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner-extra",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                    "namespace": "${SPAWNER_NAMESPACE}"
+                }
+            ],
+            "roleRef": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner-extra"
+            }
+        },
+        {
+            "kind": "ClusterRole",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner-rules",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            },
+            "rules": "${{SPAWNER_RULES}}"
+        },
+        {
+            "kind": "ClusterRoleBinding",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner-rules",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                    "namespace": "${SPAWNER_NAMESPACE}"
+                }
+            ],
+            "roleRef": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner-rules"
+            }
+        },
+        {
+            "kind": "ClusterRole",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-session-rules",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            },
+            "rules": "${{SESSION_RULES}}"
+        },
+        {
+            "kind": "ClusterRoleBinding",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-session-rules",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            },
+            "subjects": [
+                {
+                    "kind": "ServiceAccount",
+                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                    "namespace": "${SPAWNER_NAMESPACE}"
+                }
+            ],
+            "roleRef": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-session-rules"
+            }
+        },
+        {
+            "kind": "ImageStream",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            }
+        },
+        {
+            "kind": "BuildConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "triggers": [
+                    {
+                        "type": "ConfigChange"
+                    },
+                    {
+                        "type": "ImageChange"
+                    }
+                ],
+                "source": {
+                    "type": "Git",
+                    "git": {
+                        "uri": "${GIT_REPOSITORY_URL}",
+                        "ref": "${GIT_REPOSITORY_REF}"
+                    },
+                    "contextDir": "jupyterhub"
+                },
+                "strategy": {
+                    "type": "Docker",
+                    "dockerStrategy": {
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "centos/s2i-base-centos7:latest"
+                        }
+                    }
+                },
+                "output": {
+                    "to": {
+                        "kind": "ImageStreamTag",
+                        "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner:latest"
+                    }
+                }
+            }
+        },
+        {
+            "kind": "ConfigMap",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner-configs",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            },
+            "data": {
+                "jupyterhub_config.py": "${JUPYTERHUB_CONFIG}",
+                "jupyterhub_config.sh": "${JUPYTERHUB_ENVVARS}"
+            }
+        },
+        {
+            "kind": "ConfigMap",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-session-resources",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            },
+            "data": {
+                "extra_resources.json": "${EXTRA_RESOURCES}"
+            }
+        },
+        {
+            "kind": "ConfigMap",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-session-envvars",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            },
+            "data": {
+                "terminal.sh": "${TERMINAL_ENVVARS}",
+                "workshop.sh": "${WORKSHOP_ENVVARS}",
+                "gateway.sh": "${GATEWAY_ENVVARS}"
+            }
+        },
+        {
+            "kind": "DeploymentConfig",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "strategy": {
+                    "type": "Recreate"
+                },
+                "triggers": [
+                    {
+                        "type": "ConfigChange"
+                    },
+                    {
+                        "type": "ImageChange",
+                        "imageChangeParams": {
+                            "automatic": true,
+                            "containerNames": [
+                                "spawner"
+                            ],
+                            "from": {
+                                "kind": "ImageStreamTag",
+                                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner:latest"
+                            }
+                        }
+                    }
+                ],
+                "replicas": 1,
+                "selector": {
+                    "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner"
+                },
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                            "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                            "spawner": "learning-portal",
+                            "class": "spawner"
+                        }
+                    },
+                    "spec": {
+                        "serviceAccountName": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                        "containers": [
+                            {
+                                "name": "spawner",
+                                "ports": [
+                                    {
+                                        "containerPort": 8080,
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "resources": {
+                                    "limits": {
+                                        "memory": "${SPAWNER_MEMORY}"
+                                    },
+                                    "requests": {
+                                        "memory": "${SPAWNER_MEMORY}"
+                                    }
+                                },
+                                "readinessProbe": {
+                                    "httpGet": {
+                                        "path": "/hub/api",
+                                        "port": 8080,
+                                        "scheme": "HTTP"
+                                    },
+                                    "periodSeconds": 10,
+                                    "successThreshold": 1,
+                                    "failureThreshold": 3,
+                                    "timeoutSeconds": 1
+                                },
+                                "livenessProbe": {
+                                    "httpGet": {
+                                        "path": "/hub/api",
+                                        "port": 8080,
+                                        "scheme": "HTTP"
+                                    },
+                                    "periodSeconds": 10,
+                                    "successThreshold": 1,
+                                    "failureThreshold": 3,
+                                    "timeoutSeconds": 1
+                                },
+                                "env": [
+                                    {
+                                        "name": "CONFIGURATION_TYPE",
+                                        "value": "learning-portal"
+                                    },
+                                    {
+                                        "name": "APPLICATION_NAME",
+                                        "value": "${NAME_PREFIX}${WORKSHOP_NAME}"
+                                    },
+                                    {
+                                        "name": "WORKSHOP_NAME",
+                                        "value": "${WORKSHOP_NAME}"
+                                    },
+                                    {
+                                        "name": "HOMEROOM_NAME",
+                                        "value": "${HOMEROOM_NAME}"
+                                    },
+                                    {
+                                        "name": "SPAWNER_PASSWORD",
+                                        "value": "${SPAWNER_PASSWORD}"
+                                    },
+                                    {
+                                        "name": "WORKSHOP_IMAGE",
+                                        "value": "${WORKSHOP_IMAGE}"
+                                    },
+                                    {
+                                        "name": "SERVER_LIMIT",
+                                        "value": "${SERVER_LIMIT}"
+                                    },
+                                    {
+                                        "name": "WORKSHOP_MEMORY",
+                                        "value": "${WORKSHOP_MEMORY}"
+                                    },
+                                    {
+                                        "name": "CONSOLE_MEMORY",
+                                        "value": "${CONSOLE_MEMORY}"
+                                    },
+                                    {
+                                        "name": "CONSOLE_BRANDING",
+                                        "value": "${CONSOLE_BRANDING}"
+                                    },
+                                    {
+                                        "name": "CONSOLE_IMAGE",
+                                        "value": "${CONSOLE_IMAGE}"
+                                    },
+                                    {
+                                        "name": "IDLE_TIMEOUT",
+                                        "value": "${IDLE_TIMEOUT}"
+                                    },
+                                    {
+                                        "name": "MAX_SESSION_AGE",
+                                        "value": "${MAX_SESSION_AGE}"
+                                    },
+                                    {
+                                        "name": "RESOURCE_BUDGET",
+                                        "value": "${RESOURCE_BUDGET}"
+                                    },
+                                    {
+                                        "name": "DOWNLOAD_URL",
+                                        "value": "${DOWNLOAD_URL}"
+                                    },
+                                    {
+                                        "name": "WORKSHOP_FILE",
+                                        "value": "${WORKSHOP_FILE}"
+                                    },
+                                    {
+                                        "name": "OC_VERSION",
+                                        "value": "${OC_VERSION}"
+                                    },
+                                    {
+                                        "name": "ODO_VERSION",
+                                        "value": "${ODO_VERSION}"
+                                    },
+                                    {
+                                        "name": "KUBECTL_VERSION",
+                                        "value": "${KUBECTL_VERSION}"
+                                    },
+                                    {
+                                        "name": "EXPOSED_PORTS",
+                                        "value": "${EXPOSED_PORTS}"
+                                    },
+                                    {
+                                        "name": "HOMEROOM_LINK",
+                                        "value": "${HOMEROOM_LINK}"
+                                    }
+                                ],
+                                "volumeMounts": [
+                                    {
+                                        "name": "configs",
+                                        "mountPath": "/opt/app-root/configs"
+                                    },
+                                    {
+                                        "name": "resources",
+                                        "mountPath": "/opt/app-root/resources"
+                                    }
+                                ]
+                            }
+                        ],
+                        "volumes": [
+                            {
+                                "name": "configs",
+                                "configMap": {
+                                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner-configs",
+                                    "defaultMode": 420
+                                }
+                            },
+                            {
+                                "name": "resources",
+                                "configMap": {
+                                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}-session-resources",
+                                    "defaultMode": 420
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Service",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "8080-tcp",
+                        "protocol": "TCP",
+                        "port": 8080,
+                        "targetPort": 8080
+                    },
+                    {
+                        "name": "8081-tcp",
+                        "protocol": "TCP",
+                        "port": 8081,
+                        "targetPort": 8081
+                    }
+                ],
+                "selector": {
+                    "deploymentconfig": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner"
+                }
+            }
+        },
+        {
+            "kind": "Route",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                },
+                "annotations": {
+                    "kubernetes.io/tls-acme": "${LETS_ENCRYPT}",
+                    "homeroom/group": "${HOMEROOM_NAME}",
+                    "homeroom/title": "${WORKSHOP_TITLE}",
+                    "homeroom/description": "${WORKSHOP_DESCRIPTION}"
+                }
+            },
+            "spec": {
+                "host": "${WORKSHOP_NAME}-${SPAWNER_NAMESPACE}.${CLUSTER_SUBDOMAIN}",
+                "to": {
+                    "kind": "Service",
+                    "name": "${NAME_PREFIX}${WORKSHOP_NAME}-spawner",
+                    "weight": 100
+                },
+                "port": {
+                    "targetPort": "8080-tcp"
+                },
+                "tls": {
+                    "termination": "edge",
+                    "insecureEdgeTerminationPolicy": "Redirect"
+                }
+            }
+        },
+        {
+            "kind": "ImageStream",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": "${NAME_PREFIX}${WORKSHOP_NAME}-session",
+                "labels": {
+                    "app": "${NAME_PREFIX}${WORKSHOP_NAME}",
+                    "spawner": "learning-portal",
+                    "class": "spawner"
+                }
+            },
+            "spec": {
+                "lookupPolicy": {
+                    "local": true
+                },
+                "tags": [
+                    {
+                        "name": "latest",
+                        "from": {
+                            "kind": "DockerImage",
+                            "name": "${DASHBOARD_IMAGE}"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
