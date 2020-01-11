@@ -1,8 +1,7 @@
 WORKSHOP_NAME=lab-getting-started
-WORKSHOP_IMAGE=dockerext.swift.com/sterburg/lab-getting-started:ocp-4.2
+WORKSHOP_IMAGE=docker.io/sterburg/lab-getting-started:ocp-4.2
 WORKSHOP_TITLE="Getting Started with OpenShift"
 WORKSHOP_DESCRIPTION="A workshop introducing users to OpenShift"
-CONSOLE_IMAGE=dockerext.swift.com/sterburg/origin-console:4.2
 RESOURCE_BUDGET=x-large
 MAX_SESSION_AGE=7200
 IDLE_TIMEOUT=300

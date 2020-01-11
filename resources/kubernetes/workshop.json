@@ -2,15 +2,15 @@
     "kind": "Template",
     "apiVersion": "v1",
     "metadata": {
-        "name": "hello-workshop",
+        "name": "openshift-workshop",
         "annotations": {
-            "openshift.io/display-name": "Hello-app Workshop Dashboard"
+            "openshift.io/display-name": "OpenShift Workshop"
         }
     },
     "parameters": [
         {
             "name": "WORKSHOP_NAME",
-            "value": "hello-workshop",
+            "value": "openshift-workshop",
             "required": true
         },
         {
@@ -20,7 +20,7 @@
         },
         {
             "name": "WORKSHOP_IMAGE",
-            "value": "dockerext.swift.com/sterburg/lab-getting-started:ocp-4.2",
+            "value": "docker.io/sterburg/lab-getting-started:ocp-4.2",
             "required": true
         },
         {
@@ -34,11 +34,11 @@
         },
         {
             "name": "CLUSTER_SUBDOMAIN",
-            "value": "apps.si-c2-ocp.swift.com"
+            "value": "apps.workshop.openshift.eu"
         },
         {
             "name": "OPENSHIFT_PROJECT",
-            "value": "hello-workshop"
+            "value": "openshift-workshop"
         },
         {
             "name": "OPENSHIFT_USERNAME",
@@ -74,7 +74,7 @@
         },
         {
             "name": "OC_VERSION",
-            "value": "3.11"
+            "value": "4.2"
         },
         {
             "name": "ODO_VERSION",
@@ -82,11 +82,11 @@
         },
         {
             "name": "KUBECTL_VERSION",
-            "value": "1.11"
+            "value": "1.18"
         },
         {
             "name": "CONSOLE_IMAGE",
-            "value": "dockerext.swift.com/sterburg/origin-console:4.2",
+            "value": "docker.io/sterburg/origin-console:4.2",
             "required": true
         },
         {
