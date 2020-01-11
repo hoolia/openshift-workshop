@@ -54,16 +54,14 @@ Troubeleshooting
 
 ImagePullErrors:
 
-[source,shell]
-----
+```
 oc secrets link --for=pull lab-getting-started-spawner docker-internal
-----
+```
 
 File Permission Denied:
 
-[source,shell]
-----
+```
 oc adm policy add-scc-to-user anyuid -z lab-getting-started-spawner
-----
+```
 
 
