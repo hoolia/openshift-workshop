@@ -1,0 +1,131 @@
+modules:
+    common-workshop-summary:
+        name: Workshop Summary
+        exit_sign: Container Platform
+    common-ocp-architecture:
+        name: Container Platform - Overview
+        exit_sign: Automation Platform
+    common-apx-architecture:
+        name: Automation Platform - Overview
+        exit_sign: Example Application
+    common-hello-architecture:
+        name: Example Application - overview
+        exit_sign: Using Homeroom
+    common-using-homeroom:
+        name: Using Homeroom
+        exit_sign: Start Workshop
+    common-cli:
+        name: Installing the *oc* client tool
+    common-explore:
+        name: Exploring the CLI and Web Console
+    parksmap-docker:
+        name: Deploying Your First Container Image
+    parksmap-scaling:
+        name: Scaling and Self Healing
+    parksmap-routes:
+        name: Exposing Your Application to the Outside World
+    parksmap-logging:
+        name: Exploring OpenShift's Logging Capabilities
+    parksmap-permissions:
+        name: Role-Based Access Control
+    parksmap-rsh:
+        name: Remote Access to Your Application
+    nationalparks-java:
+        name: Deploying Java Code
+    nationalparks-javascript:
+        name: Deploying JavaScript Code
+    nationalparks-php:
+        name: Deploying PHP Code
+    nationalparks-python:
+        name: Deploying Python Code
+    nationalparks-java-databases:
+        name: Adding a Database (MongoDB)
+    nationalparks-javascript-databases:
+        name: Adding a Database (MongoDB)
+    nationalparks-python-databases:
+        name: Adding a Database (MongoDB)
+    nationalparks-php-databases:
+        name: Adding a Database (MongoDB)
+    nationalparks-application-health:
+        name: Application Health
+    nationalparks-java-pipeline-codechanges-gogs:
+        name: Automation for Your Application on Code Changes
+    nationalparks-java-codechanges-gogs:
+        name: Trigger Automatic Rebuilds on Code Changes
+    nationalparks-javascript-codechanges-gogs:
+        name: Trigger Automatic Rebuilds on Code Changes
+    nationalparks-php-codechanges-gogs:
+        name: Trigger Automatic Rebuilds on Code Changes
+    nationalparks-python-codechanges-gogs:
+        name: Trigger Automatic Rebuilds on Code Changes
+    nationalparks-java-pipeline:
+        name: Automate Build and Deployment with Pipelines
+    mlbparks-templates:
+        name: Using Application Templates
+    mlbparks-binary-build:
+        name: Binary Builds for Day to Day Development
+    mlbparks-debugging:
+        name: Using Port-Forwarding and Remote Debugging
+    common-further-resources:
+        name: Further Resources
+        exit_sign: Finish Workshop
+    common-workshop-links:
+        name: Workshop Links
+
+config:
+    template_engine: liquid.js
+    google_tracking_id: UA-135921114-11
+    vars:
+    ##
+    # Common fixed variables
+    #
+    - name: DOCS_URL
+      desc: URL prefix to access docs (docs.openshift.org/latest) without the protocol prefix. (https:// will be used.)
+      value: docs.openshift.com/container-platform/latest
+    - name: GOGS_PASSWORD
+      desc: Password to use for logging into GOGS_PASSWORD
+      value: gogs
+    ##
+    # Module environment
+    #
+    - name: ENV_MASTERS
+      desc: Number of master nodes in the cluster
+      value: 1
+    - name: ENV_INFRA
+      desc:  Number of ENV_INFRA nodes in the cluster
+      value: 1
+    - name: ENV_NODES
+      desc: Number of container nodes in the cluster
+      value: 20
+    - name: INFRA_PROJECT
+      value: undefined
+      aliases:
+      - SPAWNER_NAMESPACE
+      - JUPYTERHUB_NAMESPACE
+    ##
+    # Module installing CLI
+    #
+    - name: DOWNLOAD_CLIENT_WINDOWS
+      desc: URL to download oc client for Windows
+      value: "https://mirror.openshift.com/pub/openshift-v3/clients/4.0.22/windows/oc.zip"
+    - name: DOWNLOAD_CLIENT_MAC
+      desc: URL to download oc client for macOS
+      value: "https://mirror.openshift.com/pub/openshift-v3/clients/4.0.22/macosx/oc.tar.gz"
+    - name: DOWNLOAD_CLIENT_LIN32
+      desc: URL to download oc client for 32bit Linux
+      value: ""
+    - name: DOWNLOAD_CLIENT_LIN64
+      desc: URL to download oc client for 64bit Linux
+      value: "https://mirror.openshift.com/pub/openshift-v3/clients/4.0.22/linux-aarch64/oc.tar.gz"
+    - name: OC_VERSION
+      desc: Expected oc version when `oc version` is executed
+      value: "Client Version: v4.1.7-201907171753+1e3cff4-dirty\nServer Version: v1.13.4+4b86cc5"
+    ##
+    # Module docker
+    #
+    - name: PARKSMAP_IMAGENAME
+      desc: Docker image name for the parksmap application
+      value: "parksmap"
+    - name: PARKSMAP_VERSION
+      desc: Version of parksmap to use
+      value: "1.3.0"
