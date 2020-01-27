@@ -53,7 +53,7 @@ that gives basic info on the service and can be reached at:
 
 [source,bash,role=copypaste]
 ----
-http://mlbparks-{{ project_namespace  }}.{{cluster_subdomain}}/ws/info/
+http://mlbparks-{{ username }}.{{cluster_subdomain}}/ws/info/
 ----
 
 Please change line 23 to add a _AMAZING_ in front of "MLB Parks" look like this:
@@ -87,7 +87,7 @@ When the deployment is finished and the container is deployed you will see the n
 
 [source,bash,role=copypaste]
 ----
-http://mlbparks-{{ project_namespace  }}.{{cluster_subdomain}}/ws/info/
+http://mlbparks-{{ username }}.{{cluster_subdomain}}/ws/info/
 ----
 
 So now you have seen how we can speed up the build and deploy process.

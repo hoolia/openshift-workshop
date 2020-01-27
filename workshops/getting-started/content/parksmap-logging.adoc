@@ -100,11 +100,11 @@ for projects that you have access to. You will need to accept the SSL certificat
 
 image::images/parksmap-logging-kibana.png[Kibana Interface]
 
-CAUTION: In the following Kibana search(es), replace `{{ project_namespace }}` with the project provided to you and the pod_name to match your pod.
+CAUTION: In the following Kibana search(es), replace `{{ username }}` with the project provided to you and the pod_name to match your pod.
 
 [source,bash,role=copypaste]
 ----
-kubernetes.pod_name:"parksmap-1-mrxfq" AND kubernetes.namespace_name:"{{ project_namespace }}"
+kubernetes.pod_name:"parksmap-1-mrxfq" AND kubernetes.namespace_name:"{{ username }}"
 ----
 
 [NOTE]
@@ -115,11 +115,11 @@ If your search returns no hits, try changing the time-picker in the top right-ha
 If you want to see all the historical logs for this *Project*, simply remove the
 pod name reference and click the magnifying glass or press the enter key.
 
-CAUTION: In the following Kibana search(es), replace `{{ project_namespace }}` with the project provided to you.
+CAUTION: In the following Kibana search(es), replace `{{ username }}` with the project provided to you.
 
 [source,bash,role=copypaste]
 ----
-kubernetes.namespace_name:"{{ project_namespace }}"
+kubernetes.namespace_name:"{{ username }}"
 ----
 
 If you click the "x" in the column for the container name, and, in the left bar,
@@ -131,9 +131,9 @@ image::images/parksmap-logging-kibana-parksmap-headers.png[Kibana Interface]
 
 Try the following search string ensuring that you use the correct name for your project:
 
-CAUTION: In the following Kibana search(es), replace `{{ project_namespace }}` with the project provided to you.
+CAUTION: In the following Kibana search(es), replace `{{ username }}` with the project provided to you.
 
 [source,bash,role=copypaste]
 ----
-kubernetes.namespace_name:"{{ project_namespace }}" AND message:"Failure executing"
+kubernetes.namespace_name:"{{ username }}" AND message:"Failure executing"
 ----

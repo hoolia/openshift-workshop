@@ -20,7 +20,7 @@
         },
         {
             "name": "WORKSHOP_IMAGE",
-            "value": "docker.io/sterburg/lab-getting-started:ocp-4.2",
+            "value": "registry.chp.belastingdienst.nl/learn/lab-getting-started:ocp-4.2",
             "required": true
         },
         {
@@ -86,7 +86,7 @@
         },
         {
             "name": "CONSOLE_IMAGE",
-            "value": "docker.io/sterburg/origin-console:4.2",
+            "value": "registry.chp.belastingdienst.nl/learn/origin-console:4.2",
             "required": true
         },
         {

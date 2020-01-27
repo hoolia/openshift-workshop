@@ -1,6 +1,6 @@
-WORKSHOP_NAME=lab-getting-started
-#WORKSHOP_IMAGE=docker.io/sterburg/lab-getting-started:ocp-4.2
-WORKSHOP_IMAGE=docker.io/sterburg/lab-k8s-fundamentals:1.18
+WORKSHOP_NAME=lab-k8s-fundamentals
+#WORKSHOP_IMAGE=registry.chp.belastingdienst.nl/learn/lab-getting-started:ocp-4.2
+WORKSHOP_IMAGE=registry.chp.belastingdienst.nl/learn/lab-k8s-fundamentals:1.18
 WORKSHOP_TITLE="Getting Started with OpenShift"
 WORKSHOP_DESCRIPTION="A workshop introducing users to OpenShift"
 RESOURCE_BUDGET=x-large

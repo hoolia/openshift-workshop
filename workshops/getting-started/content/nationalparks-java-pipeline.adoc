@@ -32,7 +32,7 @@ on the current Deployment to automatically trigger when there is a new image or 
 
 == Configure Manual Deployments on Dev Application
 
-In the {{project_namespace}} project, click on the `nationalparks` component from Topology view. From the side panel, click on *Actions -> Edit Deployment Config*:
+In the {{ username }} project, click on the `nationalparks` component from Topology view. From the side panel, click on *Actions -> Edit Deployment Config*:
 
 image::images/devops-pipeline-deployment-edit.png[Edit pipeline]
 
@@ -64,24 +64,24 @@ We will see now Jenkins being provisioned on our project. Click on the Jenkins s
 
 image::images/devops-jenkins-deployed.png[Jenkins deployed]
 
-We could have done the same as we just did by using one single command on the OpenShift CLI. This command will deploy the service Jenkins with a persistent configuration in your {{project_namespace}} project. 
+We could have done the same as we just did by using one single command on the OpenShift CLI. This command will deploy the service Jenkins with a persistent configuration in your {{ username }} project. 
 
 WARNING: If you have successfully deployed Jenkins, do NOT execute this command.
 
 [source,shell,role=copypaste]
 ----
-oc new-app jenkins-persistent -n {{project_namespace}}
+oc new-app jenkins-persistent -n {{ username }}
 ----
 
 == Store Your Pipeline Definition in Git
 
-For this example, we're going to store our pipeline in the same Gogs repository where we have our code. In a more real scenario, and in order to honor https://en.wikipedia.org/wiki/Infrastructure_as_Code[infrastructure as code] principles, we would store all the pipeline definitions along with every OpenShift resources definitions we would use.
+For this example, we're going to store our pipeline in the same BitBucket repository where we have our code. In a more real scenario, and in order to honor https://en.wikipedia.org/wiki/Infrastructure_as_Code[infrastructure as code] principles, we would store all the pipeline definitions along with every OpenShift resources definitions we would use.
 
 Log into your `nationalparks` repository in Git as we are going to store in this repository our Jenkinsfile, that is, our pipeline definition.
 
 [source,bash,role=copypaste]
 ----
-http://gogs-{{INFRA_PROJECT}}.{{cluster_subdomain}}/{{username}}/nationalparks
+https://devtools.belastingdienst.nl/bitbucket/users/{{username}}/repos/nationalparks
 ----
 
 image::images/devops-pipeline-gogs-nationalparks.png[Nationalparks project]
@@ -99,7 +99,7 @@ pipeline {
   stages {
     stage('Build JAR') {
       steps {
-        git url: 'http://gogs-{{INFRA_PROJECT}}.{{cluster_subdomain}}/{{username}}/nationalparks'
+        git url: 'https://devtools.belastingdienst.nl/bitbucket/users/{{username}}/repos/nationalparks'
         sh "cp .settings.xml ~/.m2/settings.xml"
         sh "mvn package"
       }
@@ -173,7 +173,7 @@ From the Developer perspective click *+Add* in the left navigation menu and then
 
 image::images/devops-pipeline-add-yaml-menu.png[Add yaml to project - Menu]
 
-Now, copy the following code into the YAML input box and click *Create* to create a pipeline that uses the `Jenkinsfile.workshop` from your Gogs repository.
+Now, copy the following code into the YAML input box and click *Create* to create a pipeline that uses the `Jenkinsfile.workshop` from your BitBucket repository.
 
 [source,shell,role=copypaste]
 ----
@@ -186,13 +186,13 @@ spec:
   source:
     git:
       ref: master
-      uri: "http://gogs-{{INFRA_PROJECT}}.{{cluster_subdomain}}/{{username}}/nationalparks"
+      uri: "https://devtools.belastingdienst.nl/bitbucket/users/{{username}}/repos/nationalparks"
     type: Git
   strategy:
     jenkinsPipelineStrategy:
       env:
         - name: NEXUS_URL
-          value: "http://nexus.{{INFRA_PROJECT}}.svc:8081"
+          value: "https://devtools.belastingdienst.nl/nexus"
       jenkinsfilePath: Jenkinsfile.workshop
     type: JenkinsPipeline
   triggers:

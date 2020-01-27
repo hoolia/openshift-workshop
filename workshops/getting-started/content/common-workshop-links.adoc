@@ -21,15 +21,5 @@ Web: http://terminal-{{ INFRA_PROJECT }}.{{cluster_subdomain}}
 
 == Git Server
 
-Web: http://gogs-{{ INFRA_PROJECT }}.{{cluster_subdomain}}
+Web: https://devtools.belastingdienst.nl/bitbucket/users/wolfj09/repos/
 
-Username: `{{username}}` + 
-Password: `{{ USER_PASSWORD }}` + 
-
-== Nexus Maven repository
-
-Web: http://nexus-{{ INFRA_PROJECT }}.{{cluster_subdomain}}
-
-== OpenShift Ops View
-
-Web: http://ocp-ops-view-{{ INFRA_PROJECT }}.{{cluster_subdomain}}

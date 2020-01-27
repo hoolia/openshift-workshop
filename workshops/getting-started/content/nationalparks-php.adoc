@@ -61,12 +61,12 @@ GitLab, or any other server that speaks Git. You can even register webhooks in
 your Git server to initiate OpenShift builds triggered by any update to the
 application code!
 
-The repository that we are going to use is already cloned in the internal Gogs repository
+The repository that we are going to use is already cloned in the internal BitBucket repository
 and located at the following URL:
 
-link:http://gogs-{{INFRA_PROJECT}}.{{cluster_subdomain}}/{{username}}/nationalparks.git[Gogs Repository]
+link:https://devtools.belastingdienst.nl/bitbucket/users/{{username}}/repos/nationalparks.git[BitBucket Repository]
 
-Your Gogs credentials are:
+Your BitBucket credentials are:
 
 [source,bash]
 ----
@@ -83,7 +83,7 @@ Similar to how we used "Add to project" before with an existing image, we
 can do the same for specifying a source code repository. Since for this lab you
 have your own git repository, let's use it with a simple PHP S2I image.
 
-In the OpenShift web console, find your `{{ project_namespace  }}` project, and then
+In the OpenShift web console, find your `{{ username }}` project, and then
 click the *Add* button and then the *Browse Catalog* link as highlighted in the following image:
 
 image::images/nationalparks-show-catalog.png[Add to Project]
@@ -103,7 +103,7 @@ and for the Git repository URL, enter:
 
 [source,role=copypaste]
 ----
-http://gogs-{{INFRA_PROJECT}}.{{cluster_subdomain}}/{{username}}/nationalparks.git
+https://devtools.belastingdienst.nl/bitbucket/users/{{username}}/repos/nationalparks.git
 ----
 
 NOTE: All of these runtimes shown are made available via *Templates* and
@@ -179,22 +179,22 @@ Where you should see something like the following:
 [source,bash]
 ----
 NAME            HOST/PORT                                                   PATH      SERVICES        PORT       TERMINATION
-nationalparks   nationalparks-{{ project_namespace  }}.{{cluster_subdomain}}             nationalparks   8080-tcp
-parksmap        parksmap-{{ project_namespace  }}.{{cluster_subdomain}}                  parksmap        8080-tcp
+nationalparks   nationalparks-{{ username }}.{{cluster_subdomain}}             nationalparks   8080-tcp
+parksmap        parksmap-{{ username }}.{{cluster_subdomain}}                  parksmap        8080-tcp
 ----
 
 In the above example, the URL is:
 
 [source,bash,role=copypaste]
 ----
-http://nationalparks-{{ project_namespace  }}.{{cluster_subdomain}}
+http://nationalparks-{{ username }}.{{cluster_subdomain}}
 ----
 
 Since this is a back-end application, it doesn't actually have a web interface.
 However, it can still be used with a browser. All backends that work with the parksmap
 frontend are required to implement a `/ws/info/` endpoint. To test, visit this URL in your browser:
 
-link:http://nationalparks-{{project_namespace}}.{{cluster_subdomain}}/ws/info/[National Parks Info Page]
+link:http://nationalparks-{{ username }}.{{cluster_subdomain}}/ws/info/[National Parks Info Page]
 
 WARNING: The trailing slash is *required*.
 

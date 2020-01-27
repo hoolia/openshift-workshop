@@ -31,15 +31,15 @@ During this lab, we are going to use a few different commands to make sure that
 things in the environment are working as expected.  Don't worry if you don't
 understand all of the terminology as we will cover it in detail in later labs.
 
-In this lab environment, you already have access to single project: *{{ project_namespace  }}*.
+In this lab environment, you already have access to single project: *{{ username }}*.
 
 If you had multiple projects, the first thing you would want to do is to switch
-to the *{{ project_namespace  }}* project to make sure you're on the correct project from now on.
+to the *{{ username }}* project to make sure you're on the correct project from now on.
 You can do this with the following command:
 
 [source,bash,role=execute-1]
 ----
-oc project {{ project_namespace  }}
+oc project {{ username }}
 ----
 
 == The Web Console
@@ -53,8 +53,8 @@ The first time you access the web console, you will most likely be in the Admini
 
 image::images/explore-webconsole1sc.png[Web Console]
 
-Click on the *{{ project_namespace  }}* project link. When you click on the
-*{{ project_namespace  }}* project, you will be taken to the project details page,
+Click on the *{{ username }}* project link. When you click on the
+*{{ username }}* project, you will be taken to the project details page,
 which will list some metrics and details about your project. There's nothing there now, but that will change as you progress through the lab.
 
 image::images/explore-webconsole2.png[Explore Project]
