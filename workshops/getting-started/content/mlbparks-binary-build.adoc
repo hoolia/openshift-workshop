@@ -27,7 +27,7 @@ The first step is to clone the MLB source code from GitHub to your workshop envi
 
 [source,bash,role=execute-1]
 ----
-git clone https://github.com/openshift-roadshow/mlbparks.git
+git clone https://devtools.belastingdienst.nl/bitbucket/projects/CPET/repos/training-mlbparks.git
 ----
 
 NOTE: We are using Intellij here in the guide for screenshots but this should work regardless of your tool chain. JBoss
